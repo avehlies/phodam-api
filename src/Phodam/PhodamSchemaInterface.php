@@ -16,8 +16,6 @@ interface PhodamSchemaInterface
 {
     public function forType(string $type): RegistrarInterface;
 
-    public function forArray(): RegistrarInterface;
-
     /**
      * @param ProviderBundleInterface | class-string<ProviderBundleInterface> $bundle
      */

@@ -10,7 +10,10 @@ return (new Config())
     ->setParallelConfig(ParallelConfigFactory::detect()) // @TODO 4.0 no need to call this manually
     ->setRiskyAllowed(false)
     ->setRules([
-        '@auto' => true
+        '@auto' => true,
+        'ordered_imports' => [
+            'sort_algorithm' => 'alpha'
+        ]
     ])
     // 💡 by default, Fixer looks for `*.php` files excluding `./vendor/` - here, you can groom this config
     ->setFinder(
