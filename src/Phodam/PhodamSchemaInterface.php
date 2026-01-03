@@ -16,15 +16,18 @@ use Phodam\Types\TypeDefinition;
 interface PhodamSchemaInterface
 {
     /**
-     * @param ProviderBundleInterface | class-string<ProviderBundleInterface> $bundle
+     * @param ProviderBundleInterface | class-string<ProviderBundleInterface> $bundleOrClass
      */
-    public function registerBundle($bundle): void;
+    public function registerBundle($bundleOrClass): void;
 
     /**
-     * @param ProviderInterface | class-string<ProviderInterface> $bundle
+     * @param ProviderInterface | class-string<ProviderInterface> $providerOrClass
      */
     public function registerProvider($providerOrClass): void;
 
+    /**
+     * @param TypeDefinition $definition
+     */
     public function registerTypeDefinition(TypeDefinition $definition): void;
 
     public function getPhodam(): PhodamInterface;

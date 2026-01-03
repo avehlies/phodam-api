@@ -14,19 +14,22 @@ use Exception;
 class TypeDefinition
 {
     private string $type;
-    private ?string $name;
-    private bool $overriding;
+    private ?string $name = null;
+    private bool $overriding = false;
     /** @var array<string, FieldDefinition> */
-    private array $fields;
-    /** @var array<string, mixed> */
-    private array $overrides;
+    private array $fields = [];
 
     /**
+     * @param string $type
+     * @param string|null $name
+     * @param bool $overriding
      * @param array<string, FieldDefinition> $fields
      */
-    public function __construct(
-        array $fields = []
-    ) {
+    public function __construct(string $type, ?string $name = null, bool $overriding = false, array $fields = [])
+    {
+        $this->type = $type;
+        $this->name = $name;
+        $this->overriding = $overriding;
         $this->fields = $fields;
     }
 
@@ -35,48 +38,17 @@ class TypeDefinition
         return $this->type;
     }
 
-    public function setType(string $type): self
-    {
-        $this->type = $type;
-        return $this;
-    }
-
     public function getName(): ?string
     {
         return $this->name;
     }
 
-    public function setName(?string $name): self
-    {
-        $this->name = $name;
-        return $this;
-    }
-
     /**
-     * @return array<string, mixed>
+     * @return bool
      */
-    public function getOverrides(): array
+    public function isOverriding(): bool
     {
-        return $this->overrides;
-    }
-
-    /**
-     * @param array<string, mixed> $overrides
-     * @return $this
-     */
-    public function setOverrides(array $overrides): self
-    {
-        $this->overrides = $overrides;
-        return $this;
-    }
-
-    public function isOverriding(): bool {
         return $this->overriding;
-    }
-
-    public function setOverriding(bool $overriding): self {
-        $this->overriding = $overriding;
-        return $this;
     }
 
     /**

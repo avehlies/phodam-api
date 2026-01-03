@@ -108,4 +108,61 @@ class FieldDefinitionTest extends PhodamBaseTestCase
         $this->assertTrue($def->isNullable());
         $this->assertTrue($def->isArray());
     }
+
+    #[Test]
+    #[TestDox('From array with minimal fields creates field definition with defaults')]
+    public function testFromArrayWithMinimalFields(): void
+    {
+        $type = SimpleType::class;
+        $defArray = ['type' => $type];
+
+        $def = FieldDefinition::fromArray($defArray);
+        $this->assertInstanceOf(FieldDefinition::class, $def);
+        $this->assertEquals($type, $def->getType());
+        $this->assertNull($def->getName());
+        $this->assertIsArray($def->getConfig());
+        $this->assertEmpty($def->getConfig());
+        $this->assertIsArray($def->getOverrides());
+        $this->assertEmpty($def->getOverrides());
+        $this->assertFalse($def->isNullable());
+        $this->assertFalse($def->isArray());
+    }
+
+    #[Test]
+    #[TestDox('Set config to null sets config to null')]
+    public function testSetConfigToNull(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+        $def->setConfig(['test' => 'value']);
+        $this->assertIsArray($def->getConfig());
+        $this->assertNotEmpty($def->getConfig());
+
+        $def->setConfig(null);
+        $this->assertNull($def->getConfig());
+    }
+
+    #[Test]
+    #[TestDox('Set overrides to null sets overrides to null')]
+    public function testSetOverridesToNull(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+        $def->setOverrides(['test' => 'value']);
+        $this->assertIsArray($def->getOverrides());
+        $this->assertNotEmpty($def->getOverrides());
+
+        $def->setOverrides(null);
+        $this->assertNull($def->getOverrides());
+    }
+
+    #[Test]
+    #[TestDox('Set name to null sets name to null')]
+    public function testSetNameToNull(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+        $def->setName('TestName');
+        $this->assertEquals('TestName', $def->getName());
+
+        $def->setName(null);
+        $this->assertNull($def->getName());
+    }
 }
