@@ -13,15 +13,42 @@ use Exception;
 
 class TypeDefinition
 {
+    private string $type;
+    private ?string $name = null;
+    private bool $overriding = false;
     /** @var array<string, FieldDefinition> */
-    private array $fields;
+    private array $fields = [];
 
     /**
+     * @param string $type
+     * @param string|null $name
+     * @param bool $overriding
      * @param array<string, FieldDefinition> $fields
      */
-    public function __construct(array $fields = [])
+    public function __construct(string $type, ?string $name = null, bool $overriding = false, array $fields = [])
     {
+        $this->type = $type;
+        $this->name = $name;
+        $this->overriding = $overriding;
         $this->fields = $fields;
+    }
+
+    public function getType(): string
+    {
+        return $this->type;
+    }
+
+    public function getName(): ?string
+    {
+        return $this->name;
+    }
+    
+    /**
+     * @return bool
+     */
+    public function isOverriding(): bool
+    {
+        return $this->overriding;
     }
 
     /**
