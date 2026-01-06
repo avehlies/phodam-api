@@ -1,120 +1,27 @@
-# Interfaces and Creating Provider Bundles
+# Creating Provider Bundles
 
-This guide explains the core interfaces in Phodam and how to create your own provider bundles.
+This guide explains how to create and register provider bundles in Phodam. Provider bundles allow you to package multiple providers together and register them all at once.
 
 ## Table of Contents
 
-1. [Core Interfaces](#core-interfaces)
-2. [Creating a Provider](#creating-a-provider)
+1. [Overview](#overview)
+2. [Creating Providers](#creating-providers)
 3. [Creating a Provider Bundle](#creating-a-provider-bundle)
-4. [Complete Example](#complete-example)
-5. [Advanced Topics](#advanced-topics)
+4. [Registering a Bundle in Phodam](#registering-a-bundle-in-phodam)
+5. [Complete Example](#complete-example)
+6. [Advanced Topics](#advanced-topics)
 
-## Core Interfaces
+## Overview
 
-### ProviderInterface
+A provider bundle is a class that implements `ProviderBundleInterface` and groups together multiple providers. Instead of registering each provider individually, you can register an entire bundle with a single call.
 
-The base interface for all providers. It defines a single method:
+The bundle interface requires two methods:
+- `getProviders(): array` - Returns an array of provider class names
+- `getTypeDefinitions(): array` - Returns an array of type definitions (optional)
 
-```php
-interface ProviderInterface
-{
-    /**
-     * @param ProviderContextInterface $context the context in which to create a value
-     * @return mixed
-     * @throws Throwable
-     */
-    public function create(ProviderContextInterface $context);
-}
-```
+## Creating Providers
 
-### TypedProviderInterface
-
-For type-safe providers, use `TypedProviderInterface` which extends `ProviderInterface` with template support:
-
-```php
-/**
- * @template T
- */
-interface TypedProviderInterface extends ProviderInterface
-{
-    /**
-     * @inheritDoc
-     * @return T
-     */
-    public function create(ProviderContextInterface $context);
-}
-```
-
-### ProviderContextInterface
-
-The context object passed to providers contains:
-
-- `getType(): string` - The type to be created
-- `getOverrides(): array<string, mixed>` - Field overrides
-- `hasOverride(string $field): bool` - Check if a field is overridden
-- `getOverride(string $field): mixed` - Get override value for a field
-- `getConfig(): array<string, mixed>` - Provider-specific configuration
-- `getPhodam(): PhodamInterface` - Access to the Phodam instance for creating nested objects
-
-### ProviderBundleInterface
-
-The interface for bundling multiple providers together:
-
-```php
-interface ProviderBundleInterface
-{
-    /**
-     * Returns an array of provider class names that should be registered.
-     * These classes will be scanned for PhodamProvider/PhodamArrayProvider attributes.
-     *
-     * @return array<class-string<ProviderInterface>>
-     */
-    public function getProviders(): array;
-
-    /**
-     * Returns an array of type definitions that should be registered.
-     *
-     * @return array<TypeDefinition>
-     */
-    public function getTypeDefinitions(): array;
-}
-```
-
-### PhodamSchemaInterface
-
-The schema interface for registering bundles and providers:
-
-```php
-interface PhodamSchemaInterface
-{
-    /**
-     * @param ProviderBundleInterface | class-string<ProviderBundleInterface> $bundleOrClass
-     */
-    public function registerBundle($bundleOrClass): void;
-
-    /**
-     * @param ProviderInterface | class-string<ProviderInterface> $providerOrClass
-     */
-    public function registerProvider($providerOrClass): void;
-
-    /**
-     * @param TypeDefinition $definition
-     */
-    public function registerTypeDefinition(TypeDefinition $definition): void;
-
-    public function getPhodam(): PhodamInterface;
-}
-```
-
-## Creating a Provider
-
-### Using Attributes
-
-Providers are registered using PHP attributes. There are two attribute types:
-
-1. **`PhodamProvider`** - For type providers
-2. **`PhodamArrayProvider`** - For array providers
+Before creating a bundle, you need to create individual providers. Providers are classes that implement `ProviderInterface` or `TypedProviderInterface` and are decorated with attributes.
 
 ### Basic Provider Example
 
@@ -122,8 +29,6 @@ Here's a simple provider that creates instances of a `User` class:
 
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -190,12 +95,10 @@ class PremiumProductProvider implements TypedProviderInterface
 
 ### Provider with Nested Objects
 
-Providers can use the Phodam instance to create nested objects:
+Providers can use the Phodam instance from the context to create nested objects:
 
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -226,54 +129,12 @@ class OrderProvider implements TypedProviderInterface
 }
 ```
 
-### Provider with Configuration
-
-Providers can use the config array for provider-specific settings:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace MyLibrary\Provider;
-
-use Phodam\Provider\PhodamProvider;
-use Phodam\Provider\TypedProviderInterface;
-use Phodam\Provider\ProviderContextInterface;
-use MyLibrary\Model\Product;
-
-#[PhodamProvider(type: Product::class)]
-class ProductProvider implements TypedProviderInterface
-{
-    /**
-     * @implements TypedProviderInterface<Product>
-     */
-    public function create(ProviderContextInterface $context): Product
-    {
-        $overrides = $context->getOverrides();
-        $config = $context->getConfig();
-        
-        // Use config to control behavior
-        $minPrice = $config['minPrice'] ?? 1.00;
-        $maxPrice = $config['maxPrice'] ?? 1000.00;
-        
-        $product = new Product();
-        $product->setName($overrides['name'] ?? 'Product ' . rand(1, 1000));
-        $product->setPrice($overrides['price'] ?? rand((int)($minPrice * 100), (int)($maxPrice * 100)) / 100);
-        
-        return $product;
-    }
-}
-```
-
 ### Array Provider Example
 
 Array providers must be named and use the `PhodamArrayProvider` attribute:
 
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -287,7 +148,6 @@ class ShoppingCartProvider implements ProviderInterface
     public function create(ProviderContextInterface $context): array
     {
         $overrides = $context->getOverrides();
-        $phodam = $context->getPhodam();
         
         return [
             'id' => $overrides['id'] ?? rand(1, 10000),
@@ -301,12 +161,10 @@ class ShoppingCartProvider implements ProviderInterface
 
 ## Creating a Provider Bundle
 
-A `ProviderBundle` registers multiple providers at once. Here's how to create one:
+A provider bundle groups multiple providers together. Create a class that implements `ProviderBundleInterface`:
 
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -334,11 +192,16 @@ class MyLibraryProviderBundle implements ProviderBundleInterface
 }
 ```
 
-The bundle returns an array of provider class names. Phodam will automatically scan these classes for `PhodamProvider` or `PhodamArrayProvider` attributes and register them accordingly.
+### How It Works
+
+When you register a bundle, Phodam will:
+1. Get the list of provider class names from `getProviders()`
+2. Scan each class for `PhodamProvider` or `PhodamArrayProvider` attributes
+3. Register each provider based on the type and name specified in the attributes
 
 ### Override Providers
 
-You can mark providers as override providers using the `overriding` parameter in the attribute:
+You can mark providers as override providers using the `overriding` parameter in the attribute. This allows a provider to override an existing provider for the same type:
 
 ```php
 #[PhodamProvider(type: User::class, overriding: true)]
@@ -348,9 +211,67 @@ class CustomUserProvider implements TypedProviderInterface
 }
 ```
 
+## Registering a Bundle in Phodam
+
+Once you've created your provider bundle, you need to register it with Phodam. This is done through the `PhodamSchema` interface.
+
+### Basic Registration
+
+```php
+<?php
+
+use Phodam\PhodamSchema;
+use MyLibrary\Provider\MyLibraryProviderBundle;
+
+// Create a schema instance
+$schema = PhodamSchema::withDefaults();
+$phodam = $schema->getPhodam();
+
+// Register your bundle (using class name)
+$schema->registerBundle(MyLibraryProviderBundle::class);
+```
+
+### Using the Registered Providers
+
+After registering the bundle, you can use all the providers it contains:
+
+```php
+// Create instances using the registered providers
+$user = $phodam->create(User::class);
+$order = $phodam->create(Order::class);
+
+// Use named providers
+$premiumProduct = $phodam->create(Product::class, 'premium');
+
+// Use array providers
+$cart = $phodam->createArray('shoppingCart');
+
+// With overrides
+$customUser = $phodam->create(User::class, null, ['name' => 'Jane Doe']);
+```
+
+### Registering Multiple Bundles
+
+You can register multiple bundles:
+
+```php
+$schema->registerBundle(MyLibraryProviderBundle::class);
+$schema->registerBundle(AnotherProviderBundle::class);
+$schema->registerBundle(ThirdProviderBundle::class);
+```
+
+### Registering Individual Providers
+
+If you need to register a provider without creating a bundle, you can register it directly:
+
+```php
+// Register a single provider
+$schema->registerProvider(UserProvider::class);
+```
+
 ## Complete Example
 
-Here's a complete example of a provider library:
+Here's a complete example of creating a provider library with a bundle:
 
 ### Directory Structure
 
@@ -385,12 +306,6 @@ class User
     private string $email;
     
     // Getters and setters...
-    public function setId(int $id): void { $this->id = $id; }
-    public function setName(string $name): void { $this->name = $name; }
-    public function setEmail(string $email): void { $this->email = $email; }
-    public function getId(): int { return $this->id; }
-    public function getName(): string { return $this->name; }
-    public function getEmail(): string { return $this->email; }
 }
 ```
 
@@ -409,12 +324,6 @@ class Order
     private float $total;
     
     // Getters and setters...
-    public function setId(int $id): void { $this->id = $id; }
-    public function setUser(User $user): void { $this->user = $user; }
-    public function setTotal(float $total): void { $this->total = $total; }
-    public function getId(): int { return $this->id; }
-    public function getUser(): User { return $this->user; }
-    public function getTotal(): float { return $this->total; }
 }
 ```
 
@@ -538,37 +447,69 @@ class MyLibraryProviderBundle implements ProviderBundleInterface
 }
 ```
 
-### Usage
+### Usage in Your Application
 
 Once your library is installed, users can register it like this:
 
 ```php
 <?php
 
-use Phodam\Phodam;
 use Phodam\PhodamSchema;
 use MyLibrary\Provider\MyLibraryProviderBundle;
+use MyLibrary\Model\User;
+use MyLibrary\Model\Order;
 
+// Create schema and get Phodam instance
 $schema = PhodamSchema::withDefaults();
 $phodam = $schema->getPhodam();
 
-// Register your bundle
+// Register the bundle - all providers are now available
 $schema->registerBundle(MyLibraryProviderBundle::class);
-// Or with an instance:
-// $schema->registerBundle(new MyLibraryProviderBundle());
 
-// Now users can create instances
+// Use the providers
 $user = $phodam->create(User::class);
 $order = $phodam->create(Order::class);
 
 // With overrides
 $customUser = $phodam->create(User::class, null, ['name' => 'Jane Doe']);
-
-// With named providers (if you registered them)
-$premiumProduct = $phodam->create(Product::class, 'premium');
 ```
 
 ## Advanced Topics
+
+### Type Definitions
+
+You can register type definitions alongside providers in your bundle:
+
+```php
+use Phodam\Types\TypeDefinition;
+use Phodam\Types\FieldDefinition;
+
+class MyProviderBundle implements ProviderBundleInterface
+{
+    public function getProviders(): array
+    {
+        return [];
+    }
+
+    public function getTypeDefinitions(): array
+    {
+        $articleDefinition = new TypeDefinition(
+            Article::class,
+            null,
+            false,
+            [
+                'id' => new FieldDefinition('int'),
+                'name' => new FieldDefinition('string')
+                    ->setNullable(true),
+                'tags' => new FieldDefinition('string')
+                    ->setArray(true),
+            ]
+        );
+        
+        return [$articleDefinition];
+    }
+}
+```
 
 ### Handling Overrides
 
@@ -625,42 +566,6 @@ public function create(ProviderContextInterface $context): MyType
 }
 ```
 
-### Type Definitions
-
-You can register type definitions alongside providers:
-
-```php
-use Phodam\Types\TypeDefinition;
-use Phodam\Types\FieldDefinition;
-
-class MyProviderBundle implements ProviderBundleInterface
-{
-    public function getProviders(): array
-    {
-        return [];
-    }
-
-    public function getTypeDefinitions(): array
-    {
-        // string $type, ?string $name = null, bool $overriding = false, array $fields = []
-        $definition = new TypeDefinition(
-            Article::class,
-            null,
-            false,
-            [
-                'id' => new FieldDefinition('int'),
-                'name' => new FieldDefinition('string')
-                    ->setNullable(true),
-                'tags' => new FieldDefinition('string')
-                    ->setArray(true),
-            ]
-        );
-        
-        return [$definition];
-    }
-}
-```
-
 ## Best Practices
 
 1. **Use TypedProviderInterface** - Provides better type safety and IDE support
@@ -671,16 +576,14 @@ class MyProviderBundle implements ProviderBundleInterface
 6. **Use Named Providers** - When you need multiple variations of the same type
 7. **Leverage Phodam** - Use `$context->getPhodam()` to create nested objects
 8. **Test Your Providers** - Write unit tests for your providers
+9. **Bundle Related Providers** - Group providers that belong together in a single bundle
 
 ## Summary
 
-Creating a provider library involves:
+Creating and registering a provider bundle involves:
 
-1. Creating provider classes that implement `ProviderInterface` or `TypedProviderInterface`
-2. Adding `PhodamProvider` or `PhodamArrayProvider` attributes to your provider classes
-3. Implementing the `create()` method that generates test data
-4. Creating a bundle class that implements `ProviderBundleInterface`
-5. Returning all provider class names in the bundle's `getProviders()` method
-6. Distributing your library via Composer
+1. **Create individual providers** - Implement `ProviderInterface` or `TypedProviderInterface` with appropriate attributes
+2. **Create a bundle class** - Implement `ProviderBundleInterface` and return all provider class names in `getProviders()`
+3. **Register the bundle** - Call `$schema->registerBundle(YourBundle::class)` to register all providers at once
 
-Users can then easily register your entire library with a single call to `$schema->registerBundle(YourBundle::class)`.
+This approach makes it easy to distribute provider libraries and allows users to register your entire library with a single call.
