@@ -5,25 +5,27 @@
 // Licensed under the MIT license. See LICENSE file in the project root.
 // SPDX-License-Identifier: MIT
 
-declare(strict_types=1);
-
 namespace Phodam\Types;
 
 use Exception;
 
+/**
+ * @template T
+ */
 class TypeDefinition
 {
+    /** @var string|class-string<T> */
     private string $type;
     private ?string $name = null;
     private bool $overriding = false;
-    /** @var array<string, FieldDefinition> */
+    /** @var array<string, FieldDefinition<*>> */
     private array $fields = [];
 
     /**
-     * @param string $type
+     * @param string|class-string<T> $type
      * @param string|null $name
      * @param bool $overriding
-     * @param array<string, FieldDefinition> $fields
+     * @param array<string, FieldDefinition<*>> $fields
      */
     public function __construct(string $type, ?string $name = null, bool $overriding = false, array $fields = [])
     {
@@ -33,6 +35,9 @@ class TypeDefinition
         $this->fields = $fields;
     }
 
+    /**
+     * @return string|class-string<T>
+     */
     public function getType(): string
     {
         return $this->type;
@@ -52,7 +57,7 @@ class TypeDefinition
     }
 
     /**
-     * @return array<string, FieldDefinition>
+     * @return array<string, FieldDefinition<*>>
      */
     public function getFields(): array
     {
@@ -60,23 +65,44 @@ class TypeDefinition
     }
 
     /**
-     * @param array<string, FieldDefinition> $fields
+     * @param string $name
+     * @param FieldDefinition<*> $definition
      * @return $this
      */
-    public function setFields(array $fields): self
+    public function addFieldDefinition(string $name, FieldDefinition $definition): self
     {
-        $this->fields = $fields;
+        $this->fields[$name] = $definition;
         return $this;
     }
 
     /**
      * @param string $name
-     * @param FieldDefinition $definition
+     * @param string|class-string<T> $type
+     * @param array<string, mixed>|null $config
+     * @param array<string, mixed>|null $overrides
+     * @param bool $nullable
+     * @param bool $array
      * @return $this
      */
-    public function addField(string $name, FieldDefinition $definition): self
-    {
-        $this->fields[$name] = $definition;
+    public function addField(
+        string $name,
+        string $type,
+        ?array $config = [],
+        ?array $overrides = [],
+        bool $nullable = false,
+        bool $array = false
+    ): self {
+        $this->addFieldDefinition(
+            $name,
+            definition: new FieldDefinition(
+                type: $type,
+                name: $name,
+                config: $config,
+                overrides: $overrides,
+                nullable: $nullable,
+                array: $array
+            )
+        );
         return $this;
     }
 
@@ -88,6 +114,11 @@ class TypeDefinition
         return array_keys($this->fields);
     }
 
+    /**
+     * @param string $name
+     * @return FieldDefinition<*>
+     * @throws Exception
+     */
     public function getField(string $name): FieldDefinition
     {
         if (!array_key_exists($name, $this->fields)) {

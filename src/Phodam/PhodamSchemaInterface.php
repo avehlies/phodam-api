@@ -5,8 +5,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root.
 // SPDX-License-Identifier: MIT
 
-declare(strict_types=1);
-
 namespace Phodam;
 
 use Phodam\Provider\ProviderBundleInterface;
@@ -26,7 +24,7 @@ interface PhodamSchemaInterface
     public function registerProvider($providerOrClass): void;
 
     /**
-     * @param TypeDefinition $definition
+     * @param TypeDefinition<*> $definition
      */
     public function registerTypeDefinition(TypeDefinition $definition): void;
 

@@ -5,8 +5,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root.
 // SPDX-License-Identifier: MIT
 
-declare(strict_types=1);
-
 namespace PhodamTests\Phodam\Types;
 
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -19,16 +17,13 @@ use PhodamTests\Phodam\PhodamBaseTestCase;
 
 #[CoversClass(FieldDefinition::class)]
 #[CoversFunction(FieldDefinition::class . '::__construct')]
-#[CoversFunction(FieldDefinition::class . '::fromArray')]
-#[CoversFunction(FieldDefinition::class . '::setName')]
-#[CoversFunction(FieldDefinition::class . '::setConfig')]
-#[CoversFunction(FieldDefinition::class . '::setOverrides')]
-#[CoversFunction(FieldDefinition::class . '::setNullable')]
-#[CoversFunction(FieldDefinition::class . '::setArray')]
 #[CoversFunction(FieldDefinition::class . '::getType')]
 #[CoversFunction(FieldDefinition::class . '::getName')]
 #[CoversFunction(FieldDefinition::class . '::getConfig')]
 #[CoversFunction(FieldDefinition::class . '::getOverrides')]
+#[CoversFunction(FieldDefinition::class . '::isNullable')]
+#[CoversFunction(FieldDefinition::class . '::isArray')]
+#[CoversFunction(FieldDefinition::class . '::setOverrides')]
 #[CoversFunction(FieldDefinition::class . '::isNullable')]
 #[CoversFunction(FieldDefinition::class . '::isArray')]
 class FieldDefinitionTest extends PhodamBaseTestCase
@@ -51,8 +46,8 @@ class FieldDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Getters and setters work as expected')]
-    public function testGettersSetters(): void
+    #[TestDox('Getters work as expected')]
+    public function testGetters(): void
     {
         $type = SimpleType::class;
         $name = 'MyName';
@@ -60,13 +55,14 @@ class FieldDefinitionTest extends PhodamBaseTestCase
         $config = ['c' => 'd'];
         $nullable = true;
         $array = true;
-
-        $def = (new FieldDefinition($type))
-            ->setName($name)
-            ->setOverrides($overrides)
-            ->setConfig($config)
-            ->setNullable($nullable)
-            ->setArray($array);
+        $def = new FieldDefinition(
+            type: $type,
+            name: $name,
+            config: $config,
+            overrides: $overrides,
+            nullable: $nullable,
+            array: $array
+        );
 
         $this->assertInstanceOf(FieldDefinition::class, $def);
         $this->assertEquals($type, $def->getType());
@@ -79,90 +75,146 @@ class FieldDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('From array creates field definition')]
-    public function testFromArray()
+    #[TestDox('Constructor with null config sets config to null')]
+    public function testConstructorWithNullConfig(): void
     {
         $type = SimpleType::class;
-        $name = 'MyName';
-        $overrides = ['a' => 'b'];
-        $config = ['c' => 'd'];
-        $nullable = true;
-        $array = true;
+        $def = new FieldDefinition($type, config: null);
 
-        $defArray = [
-            'type' => $type,
-            'name' => $name,
-            'overrides' => $overrides,
-            'config' => $config,
-            'nullable' => $nullable,
-            'array' => $array
-        ];
-
-        $def = FieldDefinition::fromArray($defArray);
-        $this->assertInstanceOf(FieldDefinition::class, $def);
         $this->assertEquals($type, $def->getType());
-        $this->assertEquals($name, $def->getName());
-        $this->assertIsArray($def->getOverrides());
-        $this->assertEquals($type, $def->getType());
-        $this->assertIsArray($def->getConfig());
-        $this->assertTrue($def->isNullable());
-        $this->assertTrue($def->isArray());
-    }
-
-    #[Test]
-    #[TestDox('From array with minimal fields creates field definition with defaults')]
-    public function testFromArrayWithMinimalFields(): void
-    {
-        $type = SimpleType::class;
-        $defArray = ['type' => $type];
-
-        $def = FieldDefinition::fromArray($defArray);
-        $this->assertInstanceOf(FieldDefinition::class, $def);
-        $this->assertEquals($type, $def->getType());
-        $this->assertNull($def->getName());
-        $this->assertIsArray($def->getConfig());
-        $this->assertEmpty($def->getConfig());
-        $this->assertIsArray($def->getOverrides());
-        $this->assertEmpty($def->getOverrides());
-        $this->assertFalse($def->isNullable());
-        $this->assertFalse($def->isArray());
-    }
-
-    #[Test]
-    #[TestDox('Set config to null sets config to null')]
-    public function testSetConfigToNull(): void
-    {
-        $def = new FieldDefinition(SimpleType::class);
-        $def->setConfig(['test' => 'value']);
-        $this->assertIsArray($def->getConfig());
-        $this->assertNotEmpty($def->getConfig());
-
-        $def->setConfig(null);
         $this->assertNull($def->getConfig());
     }
 
     #[Test]
-    #[TestDox('Set overrides to null sets overrides to null')]
-    public function testSetOverridesToNull(): void
+    #[TestDox('getType returns the type')]
+    public function testGetType(): void
     {
-        $def = new FieldDefinition(SimpleType::class);
-        $def->setOverrides(['test' => 'value']);
-        $this->assertIsArray($def->getOverrides());
-        $this->assertNotEmpty($def->getOverrides());
+        $type = SimpleType::class;
+        $def = new FieldDefinition($type);
 
-        $def->setOverrides(null);
-        $this->assertNull($def->getOverrides());
+        $this->assertEquals($type, $def->getType());
     }
 
     #[Test]
-    #[TestDox('Set name to null sets name to null')]
-    public function testSetNameToNull(): void
+    #[TestDox('getName returns the name when provided')]
+    public function testGetName(): void
+    {
+        $name = 'MyField';
+        $def = new FieldDefinition(SimpleType::class, name: $name);
+
+        $this->assertEquals($name, $def->getName());
+    }
+
+    #[Test]
+    #[TestDox('getName returns null when name is not provided')]
+    public function testGetNameWithNull(): void
     {
         $def = new FieldDefinition(SimpleType::class);
-        $def->setName('TestName');
-        $this->assertEquals('TestName', $def->getName());
 
-        $def->setName(null);
         $this->assertNull($def->getName());
     }
+
+    #[Test]
+    #[TestDox('getConfig returns config when provided')]
+    public function testGetConfig(): void
+    {
+        $config = ['key' => 'value'];
+        $def = new FieldDefinition(SimpleType::class, config: $config);
+
+        $this->assertEquals($config, $def->getConfig());
+    }
+
+    #[Test]
+    #[TestDox('getConfig returns empty array by default')]
+    public function testGetConfigDefault(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+
+        $this->assertIsArray($def->getConfig());
+        $this->assertEmpty($def->getConfig());
+    }
+
+    #[Test]
+    #[TestDox('getConfig returns null when set to null')]
+    public function testGetConfigWithNull(): void
+    {
+        $def = new FieldDefinition(SimpleType::class, config: null);
+
+        $this->assertNull($def->getConfig());
+    }
+
+    #[Test]
+    #[TestDox('getOverrides returns overrides when provided')]
+    public function testGetOverrides(): void
+    {
+        $overrides = ['key' => 'value'];
+        $def = new FieldDefinition(SimpleType::class, overrides: $overrides);
+
+        $this->assertEquals($overrides, $def->getOverrides());
+    }
+
+    #[Test]
+    #[TestDox('getOverrides returns empty array by default')]
+    public function testGetOverridesDefault(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+
+        $this->assertIsArray($def->getOverrides());
+        $this->assertEmpty($def->getOverrides());
+    }
+
+    #[Test]
+    #[TestDox('isNullable returns true when nullable is true')]
+    public function testIsNullableReturnsTrue(): void
+    {
+        $def = new FieldDefinition(SimpleType::class, nullable: true);
+
+        $this->assertTrue($def->isNullable());
+    }
+
+    #[Test]
+    #[TestDox('isNullable returns false when nullable is false')]
+    public function testIsNullableReturnsFalse(): void
+    {
+        $def = new FieldDefinition(SimpleType::class, nullable: false);
+
+        $this->assertFalse($def->isNullable());
+    }
+
+    #[Test]
+    #[TestDox('isNullable returns false by default')]
+    public function testIsNullableDefault(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+
+        $this->assertFalse($def->isNullable());
+    }
+
+    #[Test]
+    #[TestDox('isArray returns true when array is true')]
+    public function testIsArrayReturnsTrue(): void
+    {
+        $def = new FieldDefinition(SimpleType::class, array: true);
+
+        $this->assertTrue($def->isArray());
+    }
+
+    #[Test]
+    #[TestDox('isArray returns false when array is false')]
+    public function testIsArrayReturnsFalse(): void
+    {
+        $def = new FieldDefinition(SimpleType::class, array: false);
+
+        $this->assertFalse($def->isArray());
+    }
+
+    #[Test]
+    #[TestDox('isArray returns false by default')]
+    public function testIsArrayDefault(): void
+    {
+        $def = new FieldDefinition(SimpleType::class);
+
+        $this->assertFalse($def->isArray());
+    }
+
 }
