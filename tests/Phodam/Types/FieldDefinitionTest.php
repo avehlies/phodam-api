@@ -23,7 +23,6 @@ use PhodamTests\Phodam\PhodamBaseTestCase;
 #[CoversFunction(FieldDefinition::class . '::getOverrides')]
 #[CoversFunction(FieldDefinition::class . '::isNullable')]
 #[CoversFunction(FieldDefinition::class . '::isArray')]
-#[CoversFunction(FieldDefinition::class . '::setOverrides')]
 #[CoversFunction(FieldDefinition::class . '::isNullable')]
 #[CoversFunction(FieldDefinition::class . '::isArray')]
 class FieldDefinitionTest extends PhodamBaseTestCase
