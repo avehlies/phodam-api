@@ -5,12 +5,14 @@
 // Licensed under the MIT license. See LICENSE file in the project root.
 // SPDX-License-Identifier: MIT
 
-declare(strict_types=1);
-
 namespace Phodam\Types;
 
+/**
+ * @template T
+ */
 class FieldDefinition
 {
+    /** @var string|class-string<T> */
     private string $type;
     private ?string $name = null;
     /** @var array<string, mixed>|null $config */
@@ -21,37 +23,31 @@ class FieldDefinition
     private bool $array = false;
 
     /**
-     * @param array<string, mixed> $definition
-     * @return self
+     * @param string|class-string<T> $type
+     * @param string|null $name
+     * @param array<string, mixed>|null $config
+     * @param array<string, mixed>|null $overrides
+     * @param bool $nullable
+     * @param bool $array
      */
-    public static function fromArray(array $definition): self
-    {
-        $def = new FieldDefinition($definition['type']);
-        if (isset($definition['name'])) {
-            $def->setName($definition['name']);
-        }
-        if (isset($definition['config'])) {
-            $def->setConfig($definition['config']);
-        }
-        if (isset($definition['overrides'])) {
-            $def->setOverrides($definition['overrides']);
-        }
-        if (isset($definition['nullable'])) {
-            $def->setNullable($definition['nullable']);
-        }
-        if (isset($definition['array'])) {
-            $def->setArray($definition['array']);
-        }
-        return $def;
-    }
-
-    public function __construct(string $type)
-    {
+    public function __construct(
+        string $type,
+        ?string $name = null,
+        ?array $config = [],
+        ?array $overrides = [],
+        bool $nullable = false,
+        bool $array = false
+    ) {
         $this->type = $type;
+        $this->name = $name;
+        $this->config = $config;
+        $this->overrides = $overrides;
+        $this->nullable = $nullable;
+        $this->array = $array;
     }
 
     /**
-     * @return string
+     * @return string|class-string<T>
      */
     public function getType(): string
     {
@@ -66,15 +62,6 @@ class FieldDefinition
         return $this->name;
     }
 
-    /**
-     * @param string|null $name
-     * @return FieldDefinition
-     */
-    public function setName(?string $name): FieldDefinition
-    {
-        $this->name = $name;
-        return $this;
-    }
 
     /**
      * @return array<string, mixed>|null
@@ -82,16 +69,6 @@ class FieldDefinition
     public function getConfig(): ?array
     {
         return $this->config;
-    }
-
-    /**
-     * @param array<string, mixed>|null $config
-     * @return FieldDefinition
-     */
-    public function setConfig(?array $config): FieldDefinition
-    {
-        $this->config = $config;
-        return $this;
     }
 
     /**
@@ -103,16 +80,6 @@ class FieldDefinition
     }
 
     /**
-     * @param array<string, mixed>|null $overrides
-     * @return FieldDefinition
-     */
-    public function setOverrides(?array $overrides): FieldDefinition
-    {
-        $this->overrides = $overrides;
-        return $this;
-    }
-
-    /**
      * @return bool
      */
     public function isNullable(): bool
@@ -121,30 +88,10 @@ class FieldDefinition
     }
 
     /**
-     * @param bool $nullable
-     * @return FieldDefinition
-     */
-    public function setNullable(bool $nullable): FieldDefinition
-    {
-        $this->nullable = $nullable;
-        return $this;
-    }
-
-    /**
      * @return bool
      */
     public function isArray(): bool
     {
         return $this->array;
-    }
-
-    /**
-     * @param bool $array
-     * @return FieldDefinition
-     */
-    public function setArray(bool $array): FieldDefinition
-    {
-        $this->array = $array;
-        return $this;
     }
 }

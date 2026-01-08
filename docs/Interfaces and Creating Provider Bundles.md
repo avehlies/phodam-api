@@ -64,8 +64,6 @@ To create a named provider (allowing multiple providers for the same type), spec
 ```php
 <?php
 
-declare(strict_types=1);
-
 namespace MyLibrary\Provider;
 
 use Phodam\Provider\PhodamProvider;
@@ -241,13 +239,13 @@ $user = $phodam->create(User::class);
 $order = $phodam->create(Order::class);
 
 // Use named providers
-$premiumProduct = $phodam->create(Product::class, 'premium');
+$premiumProduct = $phodam->create(Product::class, name: 'premium');
 
 // Use array providers
 $cart = $phodam->createArray('shoppingCart');
 
 // With overrides
-$customUser = $phodam->create(User::class, null, ['name' => 'Jane Doe']);
+$customUser = $phodam->create(User::class, overrides: ['name' => 'Jane Doe']);
 ```
 
 ### Registering Multiple Bundles
@@ -295,7 +293,7 @@ my-library/
 ```php
 <?php
 
-declare(strict_types=1);
+
 
 namespace MyLibrary\Model;
 
@@ -313,7 +311,7 @@ class User
 ```php
 <?php
 
-declare(strict_types=1);
+
 
 namespace MyLibrary\Model;
 
@@ -332,8 +330,6 @@ class Order
 **src/Provider/UserProvider.php:**
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -365,8 +361,6 @@ class UserProvider implements TypedProviderInterface
 **src/Provider/OrderProvider.php:**
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -402,8 +396,6 @@ class OrderProvider implements TypedProviderInterface
 **src/Provider/MyLibraryProviderBundle.php:**
 ```php
 <?php
-
-declare(strict_types=1);
 
 namespace MyLibrary\Provider;
 
@@ -471,7 +463,7 @@ $user = $phodam->create(User::class);
 $order = $phodam->create(Order::class);
 
 // With overrides
-$customUser = $phodam->create(User::class, null, ['name' => 'Jane Doe']);
+$customUser = $phodam->create(User::class, overrides: ['name' => 'Jane Doe']);
 ```
 
 ## Advanced Topics
@@ -495,14 +487,10 @@ class MyProviderBundle implements ProviderBundleInterface
     {
         $articleDefinition = new TypeDefinition(
             Article::class,
-            null,
-            false,
-            [
+            fields: [
                 'id' => new FieldDefinition('int'),
-                'name' => new FieldDefinition('string')
-                    ->setNullable(true),
-                'tags' => new FieldDefinition('string')
-                    ->setArray(true),
+                'name' => new FieldDefinition('string', nullable: true),
+                'tags' => new FieldDefinition('string', array: true)
             ]
         );
         
@@ -546,7 +534,7 @@ public function create(ProviderContextInterface $context): MyType
 
 Usage:
 ```php
-$phodam->create(MyType::class, null, null, ['min' => 10, 'max' => 50]);
+$phodam->create(MyType::class, overrides: ['min' => 10, 'max' => 50]);
 ```
 
 ### Error Handling

@@ -5,8 +5,6 @@
 // Licensed under the MIT license. See LICENSE file in the project root.
 // SPDX-License-Identifier: MIT
 
-declare(strict_types=1);
-
 namespace PhodamTests\Phodam\Types;
 
 use PHPUnit\Framework\Attributes\CoversClass;
@@ -25,8 +23,8 @@ use PhodamTests\Phodam\PhodamBaseTestCase;
 #[CoversFunction(TypeDefinition::class . '::isOverriding')]
 #[CoversFunction(TypeDefinition::class . '::getField')]
 #[CoversFunction(TypeDefinition::class . '::getFields')]
-#[CoversFunction(TypeDefinition::class . '::setFields')]
 #[CoversFunction(TypeDefinition::class . '::addField')]
+#[CoversFunction(TypeDefinition::class . '::addFieldDefinition')]
 #[CoversFunction(TypeDefinition::class . '::getFieldNames')]
 class TypeDefinitionTest extends PhodamBaseTestCase
 {
@@ -52,7 +50,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     {
         $type = SimpleType::class;
         $name = 'MyProvider';
-        $def = new TypeDefinition($type, $name);
+        $def = new TypeDefinition($type, name: $name);
 
         $this->assertEquals($type, $def->getType());
         $this->assertEquals($name, $def->getName());
@@ -68,7 +66,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
         $type = SimpleType::class;
         $name = 'MyProvider';
         $overriding = true;
-        $def = new TypeDefinition($type, $name, $overriding);
+        $def = new TypeDefinition($type, name: $name, overriding: $overriding);
 
         $this->assertEquals($type, $def->getType());
         $this->assertEquals($name, $def->getName());
@@ -91,7 +89,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
             'field2' => $field2
         ];
 
-        $def = new TypeDefinition($type, $name, $overriding, $fields);
+        $def = new TypeDefinition($type, name: $name, overriding: $overriding, fields: $fields);
 
         $this->assertEquals($type, $def->getType());
         $this->assertEquals($name, $def->getName());
@@ -104,7 +102,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get type returns the type')]
+    #[TestDox('getType returns the type')]
     public function testGetType(): void
     {
         $type = SimpleType::class;
@@ -114,17 +112,17 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get name returns the name when provided')]
-    public function testGetNameWithName(): void
+    #[TestDox('getName returns the name when provided')]
+    public function testGetName(): void
     {
         $name = 'MyProvider';
-        $def = new TypeDefinition(SimpleType::class, $name);
+        $def = new TypeDefinition(SimpleType::class, name: $name);
 
         $this->assertEquals($name, $def->getName());
     }
 
     #[Test]
-    #[TestDox('Get name returns null when name is not provided')]
+    #[TestDox('getName returns null when name is not provided')]
     public function testGetNameWithNull(): void
     {
         $def = new TypeDefinition(SimpleType::class);
@@ -133,25 +131,25 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Is overriding returns true when overriding is true')]
+    #[TestDox('isOverriding returns true when overriding is true')]
     public function testIsOverridingReturnsTrue(): void
     {
-        $def = new TypeDefinition(SimpleType::class, null, true);
+        $def = new TypeDefinition(SimpleType::class, overriding: true);
 
         $this->assertTrue($def->isOverriding());
     }
 
     #[Test]
-    #[TestDox('Is overriding returns false when overriding is false')]
+    #[TestDox('isOverriding returns false when overriding is false')]
     public function testIsOverridingReturnsFalse(): void
     {
-        $def = new TypeDefinition(SimpleType::class, null, false);
+        $def = new TypeDefinition(SimpleType::class, overriding: false);
 
         $this->assertFalse($def->isOverriding());
     }
 
     #[Test]
-    #[TestDox('Is overriding returns false by default')]
+    #[TestDox('isOverriding returns false by default')]
     public function testIsOverridingDefault(): void
     {
         $def = new TypeDefinition(SimpleType::class);
@@ -159,56 +157,18 @@ class TypeDefinitionTest extends PhodamBaseTestCase
         $this->assertFalse($def->isOverriding());
     }
 
-    #[Test]
-    #[TestDox('Set fields sets fields in definition')]
-    public function testSetFields(): void
-    {
-        $def = new TypeDefinition(SimpleType::class);
-
-        $field1 = new FieldDefinition(SimpleType::class);
-        $field2 = new FieldDefinition(SimpleType::class);
-        $fields = [
-            'field1' => $field1,
-            'field2' => $field2
-        ];
-
-        $result = $def->setFields($fields);
-
-        $this->assertInstanceOf(TypeDefinition::class, $result);
-        $this->assertSame($def, $result);
-        $this->assertCount(2, $def->getFields());
-        $this->assertEquals($fields, $def->getFields());
-    }
 
     #[Test]
-    #[TestDox('Set fields replaces existing fields')]
-    public function testSetFieldsReplacesExistingFields(): void
-    {
-        $field1 = new FieldDefinition(SimpleType::class);
-        $field2 = new FieldDefinition(SimpleType::class);
-        $def = new TypeDefinition(SimpleType::class, null, false, ['field1' => $field1]);
-
-        $newField = new FieldDefinition(SimpleType::class);
-        $newFields = ['field2' => $newField];
-        $def->setFields($newFields);
-
-        $this->assertCount(1, $def->getFields());
-        $this->assertArrayHasKey('field2', $def->getFields());
-        $this->assertArrayNotHasKey('field1', $def->getFields());
-        $this->assertSame($newField, $def->getFields()['field2']);
-    }
-
-    #[Test]
-    #[TestDox('Add field adds field to definition')]
-    public function testAddField(): void
+    #[TestDox('addFieldDefinition adds field definitions')]
+    public function testAddFieldDefinition(): void
     {
         $def = new TypeDefinition(SimpleType::class);
 
         $field1 = new FieldDefinition(SimpleType::class);
         $field2 = new FieldDefinition(SimpleType::class);
 
-        $result1 = $def->addField('field1', $field1);
-        $result2 = $def->addField('field2', $field2);
+        $result1 = $def->addFieldDefinition('field1', definition: $field1);
+        $result2 = $def->addFieldDefinition('field2', definition: $field2);
 
         $this->assertInstanceOf(TypeDefinition::class, $result1);
         $this->assertInstanceOf(TypeDefinition::class, $result2);
@@ -220,15 +180,15 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Add field replaces existing field with same name')]
+    #[TestDox('addFieldDefinition replaces existing field with same name')]
     public function testAddFieldReplacesExistingField(): void
     {
         $def = new TypeDefinition(SimpleType::class);
         $field1 = new FieldDefinition(SimpleType::class);
         $field2 = new FieldDefinition(SimpleType::class);
 
-        $def->addField('field1', $field1);
-        $def->addField('field1', $field2);
+        $def->addFieldDefinition('field1', definition: $field1);
+        $def->addFieldDefinition('field1', definition: $field2);
 
         $this->assertCount(1, $def->getFields());
         $this->assertSame($field2, $def->getFields()['field1']);
@@ -236,7 +196,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get field names returns array of field names when fields are added')]
+    #[TestDox('getFieldNames returns array of field names when fields are added')]
     public function testGetFieldNames(): void
     {
         $def = new TypeDefinition(SimpleType::class);
@@ -248,9 +208,9 @@ class TypeDefinitionTest extends PhodamBaseTestCase
         $field2 = new FieldDefinition(SimpleType::class);
         $field3 = new FieldDefinition(SimpleType::class);
 
-        $def->addField('field1', $field1);
-        $def->addField('field2', $field2);
-        $def->addField('field3', $field3);
+        $def->addFieldDefinition('field1', definition: $field1);
+        $def->addFieldDefinition('field2', definition: $field2);
+        $def->addFieldDefinition('field3', definition: $field3);
 
         $fieldNames = $def->getFieldNames();
         $this->assertIsArray($fieldNames);
@@ -261,7 +221,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get field names returns empty array when no fields are set')]
+    #[TestDox('getFieldNames returns empty array when no fields are set')]
     public function testGetFieldNamesReturnsEmptyArray(): void
     {
         $def = new TypeDefinition(SimpleType::class);
@@ -272,7 +232,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get field returns field when field exists')]
+    #[TestDox('getField returns field when field exists')]
     public function testGetField(): void
     {
         $field1 = new FieldDefinition(SimpleType::class);
@@ -289,7 +249,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get field throws exception when field not found')]
+    #[TestDox('getField throws exception when field not found')]
     public function testGetFieldThrowsExceptionWhenFieldNotFound(): void
     {
         $def = new TypeDefinition(SimpleType::class);
@@ -301,7 +261,7 @@ class TypeDefinitionTest extends PhodamBaseTestCase
     }
 
     #[Test]
-    #[TestDox('Get field throws exception with correct message format')]
+    #[TestDox('getField throws exception with correct message format')]
     public function testGetFieldThrowsExceptionWithCorrectMessage(): void
     {
         $def = new TypeDefinition(SimpleType::class);
@@ -310,6 +270,142 @@ class TypeDefinitionTest extends PhodamBaseTestCase
         $this->expectExceptionMessage('Unable to find field by name: missingField');
 
         $def->getField('missingField');
+    }
+
+    #[Test]
+    #[TestDox('addField with name and type creates and adds field definition')]
+    public function testAddFieldWithNameAndType(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+        $fieldName = 'myField';
+        $fieldType = 'string';
+
+        $result = $def->addField($fieldName, type: $fieldType);
+
+        $this->assertSame($def, $result);
+        $this->assertCount(1, $def->getFields());
+        $this->assertArrayHasKey($fieldName, $def->getFields());
+
+        $field = $def->getField($fieldName);
+        $this->assertInstanceOf(FieldDefinition::class, $field);
+        $this->assertEquals($fieldType, $field->getType());
+        $this->assertEquals($fieldName, $field->getName());
+        $this->assertFalse($field->isNullable());
+        $this->assertFalse($field->isArray());
+    }
+
+    #[Test]
+    #[TestDox('addField with all parameters creates field with all properties')]
+    public function testAddFieldWithAllParameters(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+        $fieldName = 'myField';
+        $fieldType = 'int';
+        $config = ['min' => 1, 'max' => 100];
+        $overrides = ['value' => 42];
+        $nullable = true;
+        $array = true;
+
+        $result = $def->addField($fieldName, $fieldType, $config, $overrides, $nullable, $array);
+
+        $this->assertSame($def, $result);
+        $field = $def->getField($fieldName);
+        $this->assertEquals($fieldType, $field->getType());
+        $this->assertEquals($fieldName, $field->getName());
+        $this->assertEquals($config, $field->getConfig());
+        $this->assertEquals($overrides, $field->getOverrides());
+        $this->assertTrue($field->isNullable());
+        $this->assertTrue($field->isArray());
+    }
+
+    #[Test]
+    #[TestDox('addField with nullable true creates nullable field')]
+    public function testAddFieldWithNullable(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+
+        $result = $def->addField('nullableField', type: 'string', nullable: true);
+
+        $this->assertSame($def, $result);
+        $field = $def->getField('nullableField');
+        $this->assertTrue($field->isNullable());
+        $this->assertFalse($field->isArray());
+    }
+
+    #[Test]
+    #[TestDox('addField with array true creates array field')]
+    public function testAddFieldWithArray(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+
+        $result = $def->addField('arrayField', type: 'string', array: true);
+
+        $this->assertSame($def, $result);
+        $field = $def->getField('arrayField');
+        $this->assertTrue($field->isArray());
+        $this->assertFalse($field->isNullable());
+    }
+
+    #[Test]
+    #[TestDox('addField replaces existing field with same name')]
+    public function testAddFieldReplacesExistingFieldWhenUsingAddField(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+
+        $def->addField('field1', type: 'string');
+        $firstField = $def->getField('field1');
+        $this->assertEquals('string', $firstField->getType());
+
+        $def->addField('field1', type: 'int', nullable: true);
+        $this->assertCount(1, $def->getFields());
+
+        $replacedField = $def->getField('field1');
+        $this->assertEquals('int', $replacedField->getType());
+        $this->assertTrue($replacedField->isNullable());
+        $this->assertNotSame($firstField, $replacedField);
+    }
+
+    #[Test]
+    #[TestDox('addField returns self for fluent interface')]
+    public function testAddFieldReturnsSelf(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+
+        $result = $def->addField('field1', type: 'string')
+            ->addField('field2', type: 'int')
+            ->addField('field3', type: 'bool');
+
+        $this->assertSame($def, $result);
+        $this->assertCount(3, $def->getFields());
+        $this->assertArrayHasKey('field1', $def->getFields());
+        $this->assertArrayHasKey('field2', $def->getFields());
+        $this->assertArrayHasKey('field3', $def->getFields());
+    }
+
+    #[Test]
+    #[TestDox('addField with empty config and overrides creates field with empty arrays')]
+    public function testAddFieldWithEmptyConfigAndOverrides(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+
+        $def->addField('myField', type: 'string', config: [], overrides: []);
+
+        $field = $def->getField('myField');
+        $this->assertEquals([], $field->getConfig());
+        $this->assertEquals([], $field->getOverrides());
+    }
+
+    #[Test]
+    #[TestDox('addField with null config and overrides creates field with null values')]
+    public function testAddFieldWithNullConfigAndOverrides(): void
+    {
+        $def = new TypeDefinition(SimpleType::class);
+
+        $def->addField('myField', type: 'string', config: null, overrides: null);
+
+        $field = $def->getField('myField');
+        $this->assertNull($field->getConfig());
+        $this->assertNull($field->getOverrides());
     }
 }
 
