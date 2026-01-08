@@ -14,7 +14,7 @@ use Exception;
  */
 class TypeDefinition
 {
-    /** @var string|class-string<T> */
+    /** @var class-string<T> */
     private string $type;
     private ?string $name = null;
     private bool $overriding = false;
@@ -22,7 +22,7 @@ class TypeDefinition
     private array $fields = [];
 
     /**
-     * @param string|class-string<T> $type
+     * @param class-string<T> $type
      * @param string|null $name
      * @param bool $overriding
      * @param array<string, FieldDefinition<*>> $fields
@@ -36,7 +36,7 @@ class TypeDefinition
     }
 
     /**
-     * @return string|class-string<T>
+     * @return class-string<T>
      */
     public function getType(): string
     {
