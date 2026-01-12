@@ -10,7 +10,7 @@ namespace Phodam\Types;
 use Exception;
 
 /**
- * @template T
+ * @template T of object
  */
 class TypeDefinition
 {
@@ -43,6 +43,9 @@ class TypeDefinition
         return $this->type;
     }
 
+    /**
+     * @return string|null
+     */
     public function getName(): ?string
     {
         return $this->name;
@@ -69,40 +72,9 @@ class TypeDefinition
      * @param FieldDefinition<*> $definition
      * @return $this
      */
-    public function addFieldDefinition(string $name, FieldDefinition $definition): self
+    public function addField(string $name, FieldDefinition $definition): self
     {
         $this->fields[$name] = $definition;
-        return $this;
-    }
-
-    /**
-     * @param string $name
-     * @param string|class-string<T> $type
-     * @param array<string, mixed>|null $config
-     * @param array<string, mixed>|null $overrides
-     * @param bool $nullable
-     * @param bool $array
-     * @return $this
-     */
-    public function addField(
-        string $name,
-        string $type,
-        ?array $config = [],
-        ?array $overrides = [],
-        bool $nullable = false,
-        bool $array = false
-    ): self {
-        $this->addFieldDefinition(
-            $name,
-            definition: new FieldDefinition(
-                type: $type,
-                name: $name,
-                config: $config,
-                overrides: $overrides,
-                nullable: $nullable,
-                array: $array
-            )
-        );
         return $this;
     }
 
